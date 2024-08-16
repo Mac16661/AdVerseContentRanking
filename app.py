@@ -6,7 +6,7 @@ eventlet.monkey_patch()
 from flask import Flask, request
 from flask_socketio import SocketIO, emit
 from flask_cors import CORS
-from Helper import AudioHandler
+from Helper import TextHandler
 
 
 app = Flask(__name__)
@@ -29,7 +29,7 @@ def handle_msg(args):
         Args:
             args -> Audio chunks
     """
-    handler = AudioHandler()
+    handler = TextHandler()
     # Creating new threads for each user audio req
     eventlet.spawn_n(handler.sendResponse, args, request.sid, socketio, eventlet)
     

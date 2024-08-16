@@ -1,4 +1,4 @@
-class SpeechToText():
+class LLMContentRanking():
     # Singleton class
 
     def getText():

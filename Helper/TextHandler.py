@@ -1,22 +1,22 @@
-class AudioHandler():
-    def process_audio(self, rawAudio):
+class TextHandler():
+    def contentRanking(self, contents):
         """
-            Process audio chunks i.e. remove ambient nose etc
+            Rank contents from the set of similar contents
             Args:   
-                rawAudio -> unprocessed audio chunks form socket
+                content -> list of similar contents
             
             returns:
-                processed audio
+                list of contents
         """
 
-    def getSpeechToText(self, speech):
+    def getProcessedText(self, text):
         """
-            Get speech data and convert it to text
+            Preprocess text data
             Args:
-                speech -> processed audio chunks
+                text -> unprocessed texts data
             
             returns:
-                text data
+                pre-process text data
         """
         pass
 
@@ -54,13 +54,12 @@ class AudioHandler():
 
         print(f"processing chunk from user -> {sidReqContext} ")
 
-        # TODO: We need to make chunk of audio file completable to be feed into speech to text model
         """
             Steps->
-                Process chunks
                 get text prediction 
                 get text embeddings
                 perform similarity search
+                rank contents
                 return ads as response 
         """
 
