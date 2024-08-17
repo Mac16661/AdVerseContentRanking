@@ -1,5 +1,54 @@
+import nltk
+import string
+import re
+from nltk.corpus import stopwords
+from nltk.tokenize import word_tokenize
+from nltk.stem.porter import PorterStemmer
+from nltk.stem import WordNetLemmatizer
+from functools import lru_cache
+
+@lru_cache(maxsize=1)
 class TextHandler():
-    
+    def __init__(self):
+        # nltk.download('punkt') # Download the 'punkt' resource
+        # nltk.download('wordnet') # Download the 'wordnet' resource
+        self.stemmer = PorterStemmer()
+        self.lemmatizer = WordNetLemmatizer()
+
+    def text_lowercase(self, text):
+        return text.lower()
+
+    def remove_punctuation(self, text):
+        translator = str.maketrans('', '', string.punctuation)
+        return text.translate(translator)
+
+    def remove_whitespace(self, text):
+        return  " ".join(text.split())
+
+
+    def remove_stopwords(self, text):
+        stop_words = set(stopwords.words("english"))
+        word_tokens = word_tokenize(text)
+        filtered_text = [word for word in word_tokens if word not in stop_words]
+        return filtered_text
+
+    def stem_words(self, text):
+    #     word_tokens = word_tokenize(text)
+        word_tokens = text
+        stems = [self.stemmer.stem(word) for word in word_tokens]
+        return stems
+
+    def lemma_words(self, text):
+    #     word_tokens = word_tokenize(text)
+        word_tokens = text
+        lemmas = [self.lemmatizer.lemmatize(word) for word in word_tokens]
+        return lemmas
+
+    def concat(self, lst):
+        s = ""
+        for i in lst:
+            s = s+i+" "
+        return s
 
     def getProcessedText(self, text):
         """
@@ -10,11 +59,14 @@ class TextHandler():
             returns:
                 pre-process text data
         """
-        pass
-
-    
-
-    
+        text = self.text_lowercase(text)
+        text = self.remove_punctuation(text)
+        text = self.remove_whitespace(text)
+        text = self.remove_stopwords(text)
+        text = self.stem_words(text)
+        text = self.lemma_words(text)
+        text = self.concat(text)
+        return re.sub(r'[^\w\s]', '', text) # removes special char
 
     def sendResponse(self, args, sidReqContext, socContext, eventContext):
         """
@@ -37,5 +89,6 @@ class TextHandler():
                 return ads as response 
         """
 
-       
-        socContext.emit("adsOut", {'message': args.text, 'id': args.id}, room=sidReqContext)
+        if args["text"] and  args["id"]:
+            processedText = self.getProcessedText(args["text"])
+            socContext.emit("adsOut", {'message': processedText, 'id': args["id"]}, room=sidReqContext)

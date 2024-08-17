@@ -29,6 +29,7 @@ def handle_msg(args):
         Args:
             args -> Audio chunks
     """
+    
     handler = TextHandler()
     # Creating new threads for each user audio req
     eventlet.spawn_n(handler.sendResponse, args, request.sid, socketio, eventlet)
