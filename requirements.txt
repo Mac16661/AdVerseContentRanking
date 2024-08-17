@@ -6,3 +6,8 @@ nltk
 transformers
 torch
 numpy==1.24.1
+requests 
+sqlalchemy 
+pymysql 
+tidb_vector
+python-dotenv

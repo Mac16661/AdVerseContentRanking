@@ -7,6 +7,7 @@ from nltk.stem.porter import PorterStemmer
 from nltk.stem import WordNetLemmatizer
 from functools import lru_cache
 from .TextToEmbeddings import TextToEmbeddings
+from .SimilaritySearch import SimilaritySearch
 import numpy as np
 
 @lru_cache(maxsize=1)
@@ -94,5 +95,6 @@ class TextHandler():
         if args["text"] and  args["id"]:
             processedText = self.getProcessedText(args["text"])
             embeddedText = TextToEmbeddings().textToEmbedding(processedText)
-            # print(embeddedText) 
-            socContext.emit("adsOut", {'message': embeddedText.shape, 'id': args["id"]}, room=sidReqContext)
+            similarItems = SimilaritySearch().similaritySearch(embeddedText)
+
+            socContext.emit("adsOut", {'message': similarItems, 'id': args["id"]}, room=sidReqContext)
