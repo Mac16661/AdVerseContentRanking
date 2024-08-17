@@ -21,7 +21,7 @@ def hello_world():
     return "Hello, World! Today"
 
 # Socket events
-@socketio.on("audioIn")
+@socketio.on("textIn")
 def handle_msg(args):
     """
         Takes chunks of audio as inputs, make audio compatible to feed into speech to text model , then convert text to vector embedding, do similar search and return ads
