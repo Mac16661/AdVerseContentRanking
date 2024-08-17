@@ -31,7 +31,7 @@ def handle_msg(args):
     """
     
     handler = TextHandler()
-    # Creating new threads for each user audio req
+    # Creating new threads for each user text req
     eventlet.spawn_n(handler.sendResponse, args, request.sid, socketio, eventlet)
     
 
