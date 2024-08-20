@@ -8,7 +8,7 @@ from nltk.stem import WordNetLemmatizer
 from functools import lru_cache
 from .TextToEmbeddings import TextToEmbeddings
 from .SimilaritySearch import SimilaritySearch
-import numpy as np
+from .LLMContentRanking import LLMContentRanking
 
 @lru_cache(maxsize=1)
 class TextHandler():
@@ -95,6 +95,29 @@ class TextHandler():
         if args["text"] and  args["id"]:
             processedText = self.getProcessedText(args["text"])
             embeddedText = TextToEmbeddings().textToEmbedding(processedText)
-            similarItems = SimilaritySearch().similaritySearch(embeddedText)
+            similarItemsObj = SimilaritySearch().similaritySearch(embeddedText)
 
-            socContext.emit("adsOut", {'message': similarItems, 'id': args["id"]}, room=sidReqContext)
+            # Preparing data to be used with LLm
+            contents = []
+            for i in similarItemsObj:
+                contents.append(i.name)
+
+            rankedContent = LLMContentRanking().contentRanking(contents, args["text"], eventContext)
+
+            ads = []
+
+            for i in rankedContent:
+                if i.isdigit():
+                    idx = int(i)
+                    if idx < len(similarItemsObj):
+                    
+                        obj = {}
+                        obj["id"] = similarItemsObj[idx].id
+                        obj["name"] = similarItemsObj[idx].name
+                        obj["image"] = similarItemsObj[idx].image
+                        obj["link"] = similarItemsObj[idx].link
+                        obj["actual_price"] = similarItemsObj[idx].actual_price
+                        obj["discount_price"] = similarItemsObj[idx].discount_price
+                        ads.append(obj)
+            
+            socContext.emit(f"adsOut", {'user_id': args["id"], 'ads': ads}, room=sidReqContext)

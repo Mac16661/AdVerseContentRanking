@@ -76,7 +76,7 @@ class SimilaritySearch():
         # print("-----------------------------------------------")
         for obj, d in results:
             # print(f"{d} -> {obj.name}")
-            similarItems.append(obj.name)
+            similarItems.append(obj)
         # print("-----------------------------------------------")
 
 
