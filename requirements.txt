@@ -12,3 +12,4 @@ pymysql==1.1.1
 tidb_vector==0.0.10
 python-dotenv==1.0.1
 groq==0.9.0
+pydub

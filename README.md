@@ -11,3 +11,7 @@ Ads recommender system
 # Common Errors
 <h3>NLTK error</h3>
 <p>nltk.download('stopwords', download_dir='E:/div_code/django_env/nltk_data')</p>
+
+<p>import nltk
+stopwords = nltk.corpus.stopwords.words('english')
+print(stopwords[:10])</p>
