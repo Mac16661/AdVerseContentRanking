@@ -13,3 +13,5 @@ tidb_vector==0.0.10
 python-dotenv==1.0.1
 groq==0.9.0
 pydub
+faster-whisper==1.0.3
+langchain-groq==0.1.9
