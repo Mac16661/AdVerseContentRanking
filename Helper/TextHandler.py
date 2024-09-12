@@ -8,7 +8,7 @@ from nltk.stem import WordNetLemmatizer
 from functools import lru_cache
 from .TextToEmbeddings import TextToEmbeddings
 from .SimilaritySearch import SimilaritySearch
-from .LLMContentRanking import LLMContentRanking
+from .LlamaRec import LLMContentRanking
 
 @lru_cache(maxsize=1)
 class TextHandler():

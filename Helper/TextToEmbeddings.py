@@ -1,13 +1,11 @@
-import torch
 import numpy as np
-from transformers import CLIPTokenizer, CLIPTextModel
+from sentence_transformers import SentenceTransformer
 from functools import lru_cache
 
 @lru_cache(maxsize=1)
 class TextToEmbeddings():
     def __init__(self):
-        self.tokenizer = CLIPTokenizer.from_pretrained("openai/clip-vit-base-patch32")
-        self.model = CLIPTextModel.from_pretrained("openai/clip-vit-base-patch32")
+        self.model = SentenceTransformer('all-MiniLM-L6-v2')
 
     def normalize_embedding(self, embedding):
         norm = np.linalg.norm(embedding)
@@ -24,8 +22,7 @@ class TextToEmbeddings():
             returns:
                 vector embeddings
         """
-        inputs = self.tokenizer(text, return_tensors="pt", truncation=True)
-        with torch.no_grad():
-            outputs = self.model(**inputs)
-        embedding = outputs.last_hidden_state.mean(dim=1).squeeze().numpy()
-        return self.normalize_embedding(embedding)
+        embeddings = self.model.encode(text)
+        print(embeddings)
+        #Output: torch.Size([1, 384])
+        return self.normalize_embedding(embeddings)
