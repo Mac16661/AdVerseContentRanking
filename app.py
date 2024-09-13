@@ -39,7 +39,7 @@ socketio = SocketIO(app, async_mode='eventlet', cors_allowed_origins="*")
 model = SentenceTransformer('all-MiniLM-L6-v2')
 
 model_size = "tiny.en"
-text_model = WhisperModel(model_size,  compute_type="int8")
+text_model = WhisperModel(model_size,  device="cpu")
 
 llm = ChatGroq(
             temperature=0, 
@@ -104,7 +104,7 @@ def query_db(vector):
                     "knnBeta": {
                         "vector": vector,
                         "path": "embedding",
-                        "k": 2
+                        "k": 3
                     }
                 }
             },
@@ -120,8 +120,8 @@ def query_db(vector):
         ])
             
         return list(results)
-    except:
-        print("Err during vector search")
+    except Exception as e:
+        print(f"Err during vector search: {str(e)}")
     
     return []
     
@@ -134,27 +134,24 @@ def stage1(customer_verdict):
 
     response = llm.invoke(promp_ph1)
     try:
-        json_data =json.loads(response.content)
+        json_data = json.loads(response.content)
         return json_data
     except:
-        print("invalid json")
+        print("invalid json",response.content)
         return {"products": []}
     
 def stage2(product_list):
-    # retrieved_items = []
-    # for i in product_list:
-        # print(i)
+    retrieved_items = []
+    for i in product_list:
         # Convert it to embeddings
-        # product_embedding = getEmbedding(i)
+        product_embedding = getEmbedding(i)
 
         # perform db query
-        # result = query_db(product_embedding)
+        result = query_db(product_embedding[0])
         
         # return id, image and name
-        # retrieved_items.append(result)
+        retrieved_items.append(result)
 
-    retrieved_items = query_db([1,2,3,4,5,6,7,8,9,0])
-    
     # BSON to json VERY IMP
     return json.loads(json_util.dumps(retrieved_items))
 
@@ -165,68 +162,80 @@ def stage3(str, customer_verdict):
     RESPONSE(NO PREAMBLE):
     """
 
-    print("\n\n\n",prompt,"\n\n\n")
+#     print("\n\n\n",prompt,"\n\n\n")
 
     response = llm.invoke(prompt)
     try:
-        print(response.content)
+#         print(response.content)
         json_data =json.loads(response.content)
         return json_data
     except:
-        print("invalid json")
+        print("invalid json ", response.content)
         return {"products": []}
+    
     
 def LLamaRec(customer_verdict):
     # STAGE 1
     stage1_data = stage1(customer_verdict)
-    # stage1_data ={"products": [
-    #     "Fanta",
-    #     "Sprite",
-    #     "Diet Coke"
-    # ]}
+    
+#     TODO: Implement err handling
+#     if(len(stage1_data) == 0):
+#         return
 
     # STAGE 2
     stage2_data = stage2(stage1_data["products"])
+
+#     Unique products  
+    unique_elements = set()
     filtered_list = []
-    # print("lenght ->>>>>>>>>>>>>",len(stage2_data))
     for i in stage2_data:
-        # print(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>")
-        # print(i["document"]["_id"]["$oid"], i["document"]["name"], i["document"]["image"],end=' \n')
-
-        filtered_data = {
-            "id": i["document"]["_id"]["$oid"],
-            "name": i["document"]["name"],
-            "image": i["document"]["image"],
-        }
-        
-        filtered_list.append(filtered_data)
-
-    str = ""
+        for j in i:
+            filtered_data = (
+                ("id", j["document"]["_id"]["$oid"]),
+                ("name", j["document"]["name"]),
+                ("image", j["document"]["image"]),
+            )
+            if filtered_data not in unique_elements:
+                unique_elements.add(filtered_data)
+                filtered_list.append(dict(filtered_data))
+            
+#     Unique products names
+    filtered_prod_name = ""
     for i in filtered_list:
-        str = str + "`"+i["name"]+"`,"
+        filtered_prod_name = filtered_prod_name + "`" + i['name'] + "`,"
+    
+    filtered_prod_name = filtered_prod_name[:len(filtered_prod_name)-2]
+    
+#     print(filtered_prod_name)
+#     # STAGE 3
+    final_products_name = stage3(filtered_prod_name, customer_verdict)
+    final_products_list = []
+    
+    for i in filtered_list:
+        if  i['name'] in final_products_name['products']:
+            final_products_list.append(i)
+    
+    
 
-    str = str[:len(str)-2]
-    # str="`Air Purifier`, `Face Mask`, `Anti-Pollution Nasal Filter`"
-    # STAGE 3
-    final_products = stage3(str, customer_verdict)
-    print(final_products)
+    return final_products_list
 
-    return final_products
+
+def speech2text(file_path):
+    segments, info = text_model.transcribe(file_path, beam_size=5)
+    
+    txt = ""
+
+    for segment in segments:
+        txt = txt + segment.text
+
+    return txt
 
 # ============================================================== HTTP ROUTES =======================================================================
 
 # Html Routes
 @app.route("/", methods=['GET'])
 def hello_world():
-    data = request.get_json()
-    #  TODO: Implementing LLAMA REC HERE
-    
-    customer_verdict = data["text"]
-    response = LLamaRec(customer_verdict)
-    if(response):
-        return response
-    
-    return "error"
+    return "Hello"
     
 
 @app.route("/text-to-embedding", methods=['POST'])
@@ -252,28 +261,20 @@ def save_record():
     if(file_path == 'error'):
         return "error"
     
-    file_path = "Data/b296b9db-330d-4617-bacf-1745b6423ead.wav"
-    
     # # Speech 2 text
-    segments, info = text_model.transcribe(file_path, beam_size=5)
-    
-    txt = ""
-
-    for segment in segments:
-        txt = txt + segment.text
-
-    print(txt)
-
-    # Embedding
-    # getEmbedding(txt)
-
-    return "success"
+    customer_data = speech2text(file_path)
+    if(len(customer_data)<1):
+        print(customer_data)
+        return []
+    print(customer_data)
     # LLamaRec
-    # stg1 = LlamaRec().firstStage(text)
-    # stg2 = LlamaRec().secondStage(stg1)
-    # stg3 = LlamaRec().thirdStage(stg2)
-
-    # Save ads to user db(MONGO DB)
+    response = LLamaRec(customer_data)
+    if(response):
+        return response
+    
+    return response
+  
+    # TODO: Save ads to user db(MONGO DB)
     
 
 
@@ -306,4 +307,4 @@ def handle_disconnect():
 
 
 if __name__ == '__main__':
-    socketio.run(app, debug=False, port=5000, host="0.0.0.0")
+    socketio.run(app, debug=True, port=5000, host="0.0.0.0")
