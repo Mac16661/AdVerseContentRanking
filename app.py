@@ -32,7 +32,7 @@ app.config['SECRET_KEY'] = 'secret!'
 CORS(app, resources={r"/*": {"origins":  ["*"]}})
 CORS(app, resources={r"/save-record": {"origins": "*"}})
 CORS(app, resources={r"/text-to-embedding": {"origins": "*"}})
-
+CORS(app, resources={r"/save-record-unity": {"origins": "*"}})
 
 socketio = SocketIO(app, async_mode='eventlet', cors_allowed_origins="*")
 
@@ -47,7 +47,9 @@ llm = ChatGroq(
             model_name="llama-3.1-70b-versatile"
     )
 
-client = MongoClient("mongodb+srv://admin:UB3C2ro6pUVUPPqg@cluster0-test.eyqrt.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0-test")
+mongodb = os.getenv("MONGODB_URI")
+
+client = MongoClient(mongodb)
 
 db = client['testDB']
 ad_collection = db['ads']
@@ -128,7 +130,6 @@ def query_db(vector):
 
 
 def stage1(customer_verdict):
-    # customer_verdict = "I like softdrinks"
 
     promp_ph1 =f"""CUSTOMER Feedback:\n{customer_verdict}\nINSTRUCTION:\nReturn a JSON object with a single key products containing an array of recommended products based on customer data. Omit any additional text or keys. The output should be a valid JSON string in the exact format below:\n{{"products":["product 1", "product 2", ... , "product n"]}}\nRESPONSE(NO PREAMBLE):"""
 
@@ -261,22 +262,42 @@ def save_record():
     if(file_path == 'error'):
         return "error"
     
+    # Speech 2 text
+    customer_data = speech2text(file_path)
+    if(len(customer_data)<1):
+        print(customer_data)
+        return []
+    print(customer_data)
+    customer_data="Laptop"
+    # LLamaRec
+    response = LLamaRec(customer_data)
+    
+    return response
+  
+    # TODO: Save ads to user db(MONGO DB)
+    
+@app.route('/save-record-unity', methods=['POST'])
+@cross_origin()
+def save_record_unity():
+
+    file_path = saveRecordedFile(request)
+    print(file_path)
+    if(file_path == 'error'):
+        print("error")
+        return []
+    
     # # Speech 2 text
     customer_data = speech2text(file_path)
     if(len(customer_data)<1):
         print(customer_data)
         return []
     print(customer_data)
+
+    # customer_data="Laptop"
     # LLamaRec
     response = LLamaRec(customer_data)
-    if(response):
-        return response
     
     return response
-  
-    # TODO: Save ads to user db(MONGO DB)
-    
-
 
 # ================================================================= Socket events ==================================================================
 
