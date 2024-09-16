@@ -1,12 +1,11 @@
 # Stage 1
-FROM python:3.8 as runner
+FROM python:3.10.10 as runner
 
 WORKDIR /app
 
-COPY requirements.txt .
-RUN pip install -r requirements.txt
+COPY . /app
 
-COPY . .
+RUN pip install -r requirements.txt
 
 EXPOSE 5000
 

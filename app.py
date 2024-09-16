@@ -176,9 +176,10 @@ def stage3(str, customer_verdict):
     
     
 def LLamaRec(customer_verdict):
+    print("Customer -> ", customer_verdict)
     # STAGE 1
     stage1_data = stage1(customer_verdict)
-    
+    print("Stage 1 -> ", stage1_data)
 #     TODO: Implement err handling
 #     if(len(stage1_data) == 0):
 #         return
@@ -207,7 +208,7 @@ def LLamaRec(customer_verdict):
     
     filtered_prod_name = filtered_prod_name[:len(filtered_prod_name)-2]
     
-#     print(filtered_prod_name)
+    print("Stage 2(Vector search) filtered - > ", filtered_prod_name)
 #     # STAGE 3
     final_products_name = stage3(filtered_prod_name, customer_verdict)
     final_products_list = []
@@ -217,7 +218,7 @@ def LLamaRec(customer_verdict):
             final_products_list.append(i)
     
     
-
+    print("Stage(Ranking) 3 -> ", final_products_list)
     return final_products_list
 
 
@@ -267,8 +268,8 @@ def save_record():
     if(len(customer_data)<1):
         print(customer_data)
         return []
-    print(customer_data)
-    customer_data="Laptop"
+    print("Speech 2 text -> ",customer_data)
+
     # LLamaRec
     response = LLamaRec(customer_data)
     
@@ -328,4 +329,4 @@ def handle_disconnect():
 
 
 if __name__ == '__main__':
-    socketio.run(app, debug=True, port=5000, host="0.0.0.0")
+    socketio.run(app, debug=False, port=5000, host="0.0.0.0")
