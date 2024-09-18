@@ -38,7 +38,7 @@ socketio = SocketIO(app, async_mode='eventlet', cors_allowed_origins="*")
 
 model = SentenceTransformer('all-MiniLM-L6-v2')
 
-model_size = "medium"
+model_size = "base"
 text_model = WhisperModel(model_size,  device="cpu")
 
 llm = ChatGroq(
