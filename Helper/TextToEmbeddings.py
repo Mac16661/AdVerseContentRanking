@@ -6,23 +6,15 @@ from functools import lru_cache
 class TextToEmbeddings():
     def __init__(self):
         self.model = SentenceTransformer('all-MiniLM-L6-v2')
+        print("Initialized Text Embedding Model ========================================\n")
 
-    def normalize_embedding(self, embedding):
+    def normalize_embedding(embedding):
         norm = np.linalg.norm(embedding)
         if norm == 0:
             return embedding
         return embedding / norm
 
-    def textToEmbedding(self, text):
-        """
-            Convert text data into vector embeddings 
-            Args:
-                text -> text from speech data
-
-            returns:
-                vector embeddings
-        """
-        embeddings = self.model.encode(text)
-        print(embeddings)
-        #Output: torch.Size([1, 384])
-        return self.normalize_embedding(embeddings)
+    def getEmbedding(self, text):
+        if isinstance(text, str):
+            embeddings = self.model.encode([text])
+            return embeddings.tolist()
